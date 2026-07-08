@@ -1,0 +1,10 @@
+__pycache__/
+*.py[cod]
+*.jsonl
+.DS_Store
+.env
+.env.*
+!.env.example
+auraos/ui/activation_state.json
+auraos/ui/activation_position.json
+auraos/ui/activation_settings.json

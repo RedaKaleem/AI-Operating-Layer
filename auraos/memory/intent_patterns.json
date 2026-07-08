@@ -1,0 +1,10 @@
+[
+  {
+    "kind": "app",
+    "pattern": "pull up {target}"
+  },
+  {
+    "kind": "browser",
+    "pattern": "find me {target}"
+  }
+]
