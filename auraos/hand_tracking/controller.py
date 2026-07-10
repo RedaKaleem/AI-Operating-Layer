@@ -8,7 +8,7 @@ import time
 class CursorController:
     """Small pyautogui adapter with smoothing and click cooldown."""
 
-    def __init__(self, smoothing: float = 0.35, click_cooldown: float = 0.6, edge_margin: float = 0.12) -> None:
+    def __init__(self, smoothing: float = 0.55, click_cooldown: float = 0.6, edge_margin: float = 0.12) -> None:
         pyautogui = _require_pyautogui()
         pyautogui.FAILSAFE = True
         pyautogui.PAUSE = 0

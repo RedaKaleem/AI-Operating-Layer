@@ -8,3 +8,5 @@ __pycache__/
 auraos/ui/activation_state.json
 auraos/ui/activation_position.json
 auraos/ui/activation_settings.json
+auraos/ui/gesture_control.json
+models/hand_gesture/gesture_model.joblib

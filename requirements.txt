@@ -4,3 +4,8 @@ sounddevice
 opencv-python
 mediapipe==0.10.14
 pyautogui
+pillow
+numpy
+pandas
+scikit-learn
+joblib

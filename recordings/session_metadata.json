@@ -1,0 +1,71 @@
+[
+  {
+    "session_id": "20260710T134134Z-d9b740d6",
+    "started_at": "2026-07-10T13:41:34.798932+00:00",
+    "dataset_path": "/Users/redakaleem/Desktop/aura_os/dataset/raw/hand_gestures.csv",
+    "gestures": [
+      "pointing",
+      "open_palm",
+      "two_fingers",
+      "thumb_index_pinch",
+      "thumb_middle_pinch",
+      "closed_fist",
+      "spread_fingers",
+      "idle"
+    ],
+    "status": "deleted",
+    "deleted_at": "2026-07-10T13:42:11.356521+00:00",
+    "deleted_rows": 31
+  },
+  {
+    "session_id": "20260710T134211Z-60af6476",
+    "started_at": "2026-07-10T13:42:11.356849+00:00",
+    "dataset_path": "/Users/redakaleem/Desktop/aura_os/dataset/raw/hand_gestures.csv",
+    "gestures": [
+      "pointing",
+      "open_palm",
+      "two_fingers",
+      "thumb_index_pinch",
+      "thumb_middle_pinch",
+      "closed_fist",
+      "spread_fingers",
+      "idle"
+    ],
+    "status": "completed",
+    "finished_at": "2026-07-10T13:50:41.582488+00:00"
+  },
+  {
+    "session_id": "20260710T135555Z-e28ac223",
+    "started_at": "2026-07-10T13:55:55.623784+00:00",
+    "dataset_path": "/Users/redakaleem/Desktop/aura_os/dataset/raw/hand_gestures.csv",
+    "gestures": [
+      "pointing",
+      "open_palm",
+      "two_fingers",
+      "thumb_index_pinch",
+      "thumb_middle_pinch",
+      "closed_fist",
+      "spread_fingers",
+      "idle"
+    ],
+    "status": "completed",
+    "finished_at": "2026-07-10T14:00:15.983271+00:00"
+  },
+  {
+    "session_id": "20260710T140028Z-3b431406",
+    "started_at": "2026-07-10T14:00:28.218113+00:00",
+    "dataset_path": "/Users/redakaleem/Desktop/aura_os/dataset/raw/hand_gestures.csv",
+    "gestures": [
+      "pointing",
+      "open_palm",
+      "two_fingers",
+      "thumb_index_pinch",
+      "thumb_middle_pinch",
+      "closed_fist",
+      "spread_fingers",
+      "idle"
+    ],
+    "status": "completed",
+    "finished_at": "2026-07-10T14:16:49.244823+00:00"
+  }
+]

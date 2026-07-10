@@ -1,6 +1,16 @@
 """Speech-to-text for AuraOS voice mode."""
 
+from dataclasses import dataclass
+from math import exp
 from pathlib import Path
+
+
+@dataclass(frozen=True)
+class TranscriptionResult:
+    """Transcribed text with an estimated confidence."""
+
+    text: str
+    confidence: float
 
 
 class SpeechToText:
@@ -20,6 +30,9 @@ class SpeechToText:
         self._model = None
 
     def transcribe(self, audio_path: Path) -> str:
+        return self.transcribe_with_confidence(audio_path).text
+
+    def transcribe_with_confidence(self, audio_path: Path) -> TranscriptionResult:
         model = self._get_model()
         segments, _ = model.transcribe(
             str(audio_path),
@@ -32,7 +45,19 @@ class SpeechToText:
             compression_ratio_threshold=2.4,
             vad_parameters={"min_silence_duration_ms": 500, "speech_pad_ms": 250},
         )
-        return " ".join(segment.text.strip() for segment in segments).strip()
+        segment_list = list(segments)
+        text = " ".join(segment.text.strip() for segment in segment_list).strip()
+        if not text or not segment_list:
+            return TranscriptionResult("", 0.0)
+
+        confidences = []
+        for segment in segment_list:
+            avg_logprob = getattr(segment, "avg_logprob", -1.0)
+            no_speech_prob = getattr(segment, "no_speech_prob", 0.0)
+            confidence = max(0.0, min(1.0, exp(avg_logprob) * (1.0 - no_speech_prob)))
+            confidences.append(confidence)
+
+        return TranscriptionResult(text, sum(confidences) / len(confidences))
 
     def _get_model(self):
         if self._model is not None:

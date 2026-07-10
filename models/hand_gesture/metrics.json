@@ -1,0 +1,168 @@
+{
+  "trained_at": "2026-07-10T15:04:20.477714+00:00",
+  "dataset_path": "/Users/redakaleem/Desktop/aura_os/dataset/raw/hand_gestures.csv",
+  "rows_total": 4744,
+  "rows_used": 4744,
+  "train_rows": 3795,
+  "test_rows": 949,
+  "min_confidence": 0.7,
+  "test_size": 0.2,
+  "random_state": 42,
+  "accuracy": 0.9599578503688093,
+  "target_accuracy": 0.9,
+  "classification_report": {
+    "pointing": {
+      "precision": 0.9642857142857143,
+      "recall": 0.9473684210526315,
+      "f1-score": 0.9557522123893806,
+      "support": 114.0
+    },
+    "open_palm": {
+      "precision": 0.9380530973451328,
+      "recall": 0.9217391304347826,
+      "f1-score": 0.9298245614035088,
+      "support": 115.0
+    },
+    "two_fingers": {
+      "precision": 0.9918032786885246,
+      "recall": 0.983739837398374,
+      "f1-score": 0.9877551020408163,
+      "support": 123.0
+    },
+    "thumb_index_pinch": {
+      "precision": 0.963963963963964,
+      "recall": 0.9907407407407407,
+      "f1-score": 0.9771689497716894,
+      "support": 108.0
+    },
+    "thumb_middle_pinch": {
+      "precision": 0.9473684210526315,
+      "recall": 0.9557522123893806,
+      "f1-score": 0.9515418502202643,
+      "support": 113.0
+    },
+    "closed_fist": {
+      "precision": 0.9779411764705882,
+      "recall": 0.9851851851851852,
+      "f1-score": 0.981549815498155,
+      "support": 135.0
+    },
+    "spread_fingers": {
+      "precision": 0.9818181818181818,
+      "recall": 0.9230769230769231,
+      "f1-score": 0.9515418502202643,
+      "support": 117.0
+    },
+    "idle": {
+      "precision": 0.916030534351145,
+      "recall": 0.967741935483871,
+      "f1-score": 0.9411764705882353,
+      "support": 124.0
+    },
+    "accuracy": 0.9599578503688093,
+    "macro avg": {
+      "precision": 0.9601580459969852,
+      "recall": 0.959418048220236,
+      "f1-score": 0.9595388515165393,
+      "support": 949.0
+    },
+    "weighted avg": {
+      "precision": 0.9604212781294039,
+      "recall": 0.9599578503688093,
+      "f1-score": 0.9599403939894716,
+      "support": 949.0
+    }
+  },
+  "confusion_matrix_labels": [
+    "pointing",
+    "open_palm",
+    "two_fingers",
+    "thumb_index_pinch",
+    "thumb_middle_pinch",
+    "closed_fist",
+    "spread_fingers",
+    "idle"
+  ],
+  "confusion_matrix": [
+    [
+      108,
+      1,
+      1,
+      2,
+      1,
+      0,
+      0,
+      1
+    ],
+    [
+      0,
+      106,
+      0,
+      1,
+      2,
+      1,
+      1,
+      4
+    ],
+    [
+      1,
+      0,
+      121,
+      0,
+      1,
+      0,
+      0,
+      0
+    ],
+    [
+      1,
+      0,
+      0,
+      107,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      2,
+      2,
+      0,
+      0,
+      108,
+      0,
+      0,
+      1
+    ],
+    [
+      0,
+      1,
+      0,
+      0,
+      1,
+      133,
+      0,
+      0
+    ],
+    [
+      0,
+      2,
+      0,
+      1,
+      0,
+      1,
+      108,
+      5
+    ],
+    [
+      0,
+      1,
+      0,
+      0,
+      1,
+      1,
+      1,
+      120
+    ]
+  ]
+}

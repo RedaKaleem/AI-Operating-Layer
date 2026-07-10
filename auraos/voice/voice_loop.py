@@ -1,10 +1,14 @@
 """Voice command loop for AuraOS."""
 
+import subprocess
+import sys
+from difflib import SequenceMatcher
 from enum import Enum
 from pathlib import Path
 from time import sleep
 from time import monotonic
 
+from auraos.hand_tracking import control as gesture_control
 from auraos.main import AuraOSCore
 from auraos.ui.activation_indicator import ActivationStateWriter, IndicatorState
 from auraos.voice.microphone import MicrophoneRecorder
@@ -38,6 +42,50 @@ REPEAT_COMMANDS = {
     "repeat that",
     "repeat last response",
     "say that again",
+}
+
+START_DICTATION_COMMANDS = {
+    "type it",
+    "type this",
+    "type that",
+    "typing mode",
+    "start typing",
+    "start dictation",
+    "dictation",
+    "start dictating",
+}
+
+STOP_DICTATION_COMMANDS = {
+    "stop typing",
+    "stop dictation",
+    "done typing",
+    "finish typing",
+}
+
+ACTIVATE_GESTURE_COMMANDS = {
+    "activate gestures",
+    "activate gesture",
+    "activate hand tracking",
+    "start gestures",
+    "start gesture",
+    "start hand tracking",
+    "turn on gestures",
+    "turn on hand tracking",
+    "enable gestures",
+    "enable hand tracking",
+}
+
+DEACTIVATE_GESTURE_COMMANDS = {
+    "deactivate gestures",
+    "deactivate gesture",
+    "deactivate hand tracking",
+    "stop gestures",
+    "stop gesture",
+    "stop hand tracking",
+    "turn off gestures",
+    "turn off hand tracking",
+    "disable gestures",
+    "disable hand tracking",
 }
 
 WAKE_PREFIXES = {
@@ -93,6 +141,8 @@ class AuraOSVoiceLoop:
         self.state = VoiceState.IDLE
         self.last_response = ""
         self.indicator = indicator
+        self.dictation_active = False
+        self.hand_tracking_process: subprocess.Popen | None = None
         self._set_indicator_state(IndicatorState.IDLE)
 
     def process_text(self, command: str) -> bool:
@@ -100,13 +150,21 @@ class AuraOSVoiceLoop:
         if not cleaned_command:
             return self._handle_silence()
 
-        if cleaned_command in VOICE_EXIT_COMMANDS:
+        if _matches_command(cleaned_command, STOP_DICTATION_COMMANDS):
+            self.dictation_active = False
+            feedback = "Stopped typing."
+            print(feedback)
+            self._speak_feedback(feedback, remember=False)
+            return False
+
+        if _matches_command(cleaned_command, VOICE_EXIT_COMMANDS):
             feedback = "Exiting AuraOS voice mode."
             print(feedback)
             self._speak_feedback(feedback, remember=False)
+            self._stop_hand_tracking()
             return True
 
-        if cleaned_command in VOICE_SLEEP_COMMANDS:
+        if _matches_command(cleaned_command, VOICE_SLEEP_COMMANDS):
             self.awake = False
             feedback = "Going to sleep."
             print(feedback)
@@ -135,6 +193,14 @@ class AuraOSVoiceLoop:
         cleaned_command = self._strip_wake_word_if_present(cleaned_command)
         self.last_activity_at = monotonic()
 
+        gesture_result = self._handle_gesture_command(cleaned_command)
+        if gesture_result is not None:
+            return gesture_result
+
+        dictation_result = self._handle_dictation_command(cleaned_command)
+        if dictation_result is not None:
+            return dictation_result
+
         if cleaned_command in REPEAT_COMMANDS:
             self._repeat_last_response()
             return False
@@ -158,6 +224,9 @@ class AuraOSVoiceLoop:
         return self._extract_command_after_wake_word(cleaned_command) is not None
 
     def run_once(self, duration_seconds: float = 5.0) -> bool:
+        if not self.require_wake_word:
+            self.awake = True
+
         if self.awake:
             self._set_state(VoiceState.LISTENING)
         else:
@@ -168,9 +237,10 @@ class AuraOSVoiceLoop:
         try:
             if self.awake:
                 self._set_state(VoiceState.PROCESSING)
-            command = self.speech_to_text.transcribe(audio_path)
+            transcription = self.speech_to_text.transcribe_with_confidence(audio_path)
+            command = transcription.text
             if command:
-                print(f"Heard: {command}")
+                print(f"Heard: {command} [voice accuracy: {transcription.confidence:.0%}]")
         finally:
             self._remove_audio_file(audio_path)
 
@@ -196,6 +266,115 @@ class AuraOSVoiceLoop:
             if should_exit:
                 break
 
+        self._set_state(VoiceState.IDLE)
+
+    def _handle_gesture_command(self, command: str) -> bool | None:
+        if _matches_command(command, ACTIVATE_GESTURE_COMMANDS):
+            feedback = self._start_hand_tracking()
+            print(feedback)
+            self._speak_feedback(feedback, remember=False)
+            return False
+
+        if _matches_command(command, DEACTIVATE_GESTURE_COMMANDS):
+            feedback = self._stop_hand_tracking()
+            print(feedback)
+            self._speak_feedback(feedback, remember=False)
+            return False
+
+        return None
+
+    def _start_hand_tracking(self) -> str:
+        if self.hand_tracking_process is not None and self.hand_tracking_process.poll() is None:
+            return "Hand tracking is already active."
+
+        gesture_control.clear_stop_request()
+        command = [
+            sys.executable,
+            "-m",
+            "auraos.hand_tracking_main",
+            "--control-cursor",
+            "--max-hands",
+            "2",
+        ]
+        self.hand_tracking_process = subprocess.Popen(command)
+        return "Hand tracking activated."
+
+    def _stop_hand_tracking(self) -> str:
+        gesture_control.request_stop("voice")
+        if self.hand_tracking_process is None:
+            return "Hand tracking deactivated."
+
+        if self.hand_tracking_process.poll() is None:
+            self.hand_tracking_process.terminate()
+            deadline = monotonic() + 3.0
+            while self.hand_tracking_process.poll() is None and monotonic() < deadline:
+                sleep(0.05)
+            if self.hand_tracking_process.poll() is None:
+                self.hand_tracking_process.kill()
+
+        self.hand_tracking_process = None
+        return "Hand tracking deactivated."
+
+    def _handle_dictation_command(self, command: str) -> bool | None:
+        if _matches_command(command, STOP_DICTATION_COMMANDS):
+            self.dictation_active = False
+            feedback = "Stopped typing."
+            print(feedback)
+            self._speak_feedback(feedback, remember=False)
+            return False
+
+        if _matches_command(command, START_DICTATION_COMMANDS):
+            self.dictation_active = True
+            feedback = "Typing mode on."
+            print(feedback)
+            self._speak_feedback(feedback, remember=False)
+            return False
+
+        inline_text = self._dictation_text_from_command(command)
+        if inline_text is not None:
+            self._type_text(inline_text)
+            return False
+
+        if self.dictation_active:
+            self._type_text(command)
+            return False
+
+        return None
+
+    def _dictation_text_from_command(self, command: str) -> str | None:
+        prefixes = (
+            "type it ",
+            "type this ",
+            "type that ",
+            "type ",
+            "write ",
+            "write this ",
+            "start typing ",
+            "start dictation ",
+            "start dictating ",
+        )
+        for prefix in prefixes:
+            if command.startswith(prefix):
+                return command[len(prefix) :].strip()
+        return None
+
+    def _type_text(self, text: str) -> None:
+        if not text:
+            self.dictation_active = True
+            feedback = "Typing mode on."
+            print(feedback)
+            self._speak_feedback(feedback, remember=False)
+            return
+
+        self._set_state(VoiceState.PROCESSING)
+        try:
+            import pyautogui
+        except ImportError as error:
+            raise RuntimeError("Typing mode requires pyautogui. Install dependencies with `python3 -m pip install -r requirements.txt`.") from error
+
+        pyautogui.write(text, interval=0.01)
+        pyautogui.press("space")
+        print(f"Typed: {text}")
         self._set_state(VoiceState.IDLE)
 
     def _normalize_voice_command(self, command: str) -> str:
@@ -229,6 +408,10 @@ class AuraOSVoiceLoop:
 
     def _handle_silence(self) -> bool:
         if not self.awake:
+            return False
+
+        if not self.require_wake_word:
+            print("Still listening.")
             return False
 
         idle_seconds = monotonic() - self.last_activity_at
@@ -300,3 +483,10 @@ class AuraOSVoiceLoop:
             audio_path.unlink()
         except FileNotFoundError:
             pass
+
+
+def _matches_command(command: str, options: set[str], threshold: float = 0.88) -> bool:
+    if command in options:
+        return True
+
+    return any(SequenceMatcher(None, command, option).ratio() >= threshold for option in options)

@@ -4,7 +4,17 @@ from __future__ import annotations
 
 import os
 import tempfile
+from dataclasses import dataclass
 from pathlib import Path
+
+
+@dataclass(frozen=True)
+class DetectedHand:
+    """MediaPipe hand detection output with metadata for dataset recording."""
+
+    landmarks: list[tuple[float, float, float]]
+    handedness: str
+    confidence: float
 
 
 class HandDetector:
@@ -23,12 +33,15 @@ class HandDetector:
                     "This MediaPipe install does not include mp.solutions. "
                     "Install the pinned dependency with `python3 -m pip install -r requirements.txt`."
                 )
-            self._hands = mp.solutions.hands.Hands(
-                static_image_mode=False,
-                max_num_hands=max_hands,
-                min_detection_confidence=0.55,
-                min_tracking_confidence=0.55,
-            )
+            try:
+                self._hands = mp.solutions.hands.Hands(
+                    static_image_mode=False,
+                    max_num_hands=max_hands,
+                    min_detection_confidence=0.55,
+                    min_tracking_confidence=0.55,
+                )
+            except RuntimeError as error:
+                raise _friendly_mediapipe_error(error) from error
             return
 
         model = Path(model_path).expanduser()
@@ -45,9 +58,17 @@ class HandDetector:
             running_mode=mp.tasks.vision.RunningMode.IMAGE,
             num_hands=max_hands,
         )
-        self._landmarker = mp.tasks.vision.HandLandmarker.create_from_options(options)
+        try:
+            self._landmarker = mp.tasks.vision.HandLandmarker.create_from_options(options)
+        except RuntimeError as error:
+            raise _friendly_mediapipe_error(error) from error
 
     def detect(self, frame_bgr):
+        """Return landmark lists only, preserving the live controller API."""
+        return [hand.landmarks for hand in self.detect_hands(frame_bgr)]
+
+    def detect_hands(self, frame_bgr) -> list[DetectedHand]:
+        """Return hand landmarks plus handedness and MediaPipe confidence."""
         cv2 = _require_cv2()
         frame_rgb = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB)
 
@@ -55,11 +76,43 @@ class HandDetector:
             result = self._hands.process(frame_rgb)
             if not result.multi_hand_landmarks:
                 return []
-            return [[(lm.x, lm.y, lm.z) for lm in hand.landmark] for hand in result.multi_hand_landmarks]
+            detected: list[DetectedHand] = []
+            handedness_items = result.multi_handedness or []
+            for index, hand in enumerate(result.multi_hand_landmarks):
+                handedness = "Unknown"
+                confidence = 0.0
+                if index < len(handedness_items) and handedness_items[index].classification:
+                    classification = handedness_items[index].classification[0]
+                    handedness = classification.label or "Unknown"
+                    confidence = float(classification.score)
+                detected.append(
+                    DetectedHand(
+                        landmarks=[(lm.x, lm.y, lm.z) for lm in hand.landmark],
+                        handedness=handedness,
+                        confidence=confidence,
+                    )
+                )
+            return detected
 
         mp_image = self._mp.Image(image_format=self._mp.ImageFormat.SRGB, data=frame_rgb)
         result = self._landmarker.detect(mp_image)
-        return [[(lm.x, lm.y, lm.z) for lm in hand] for hand in result.hand_landmarks]
+        detected = []
+        handedness_items = getattr(result, "handedness", []) or []
+        for index, hand in enumerate(result.hand_landmarks):
+            handedness = "Unknown"
+            confidence = 0.0
+            if index < len(handedness_items) and handedness_items[index]:
+                category = handedness_items[index][0]
+                handedness = getattr(category, "category_name", None) or getattr(category, "display_name", None) or "Unknown"
+                confidence = float(getattr(category, "score", 0.0))
+            detected.append(
+                DetectedHand(
+                    landmarks=[(lm.x, lm.y, lm.z) for lm in hand],
+                    handedness=handedness,
+                    confidence=confidence,
+                )
+            )
+        return detected
 
     def close(self) -> None:
         if self._hands is not None:
@@ -93,3 +146,14 @@ def _require_mediapipe():
             "`python3 -m pip install -r requirements.txt`."
         ) from error
     return mp
+
+
+def _friendly_mediapipe_error(error: RuntimeError) -> RuntimeError:
+    message = str(error)
+    if "kGpuService" in message or "NSOpenGLPixelFormat" in message:
+        return RuntimeError(
+            "MediaPipe could not start its macOS graphics service. Run the hand tracking command "
+            "from your normal Terminal window, not from a sandboxed/background runner, and make sure "
+            "Terminal or Python has Camera permission in System Settings > Privacy & Security > Camera."
+        )
+    return error

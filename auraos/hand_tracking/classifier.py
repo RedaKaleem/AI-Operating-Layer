@@ -37,6 +37,7 @@ class HandPose:
     thumb_index_distance: float
     thumb_middle_distance: float
     index_pinky_distance: float
+    confidence: float
 
     @property
     def is_thumb_index_pinch(self) -> bool:
@@ -55,7 +56,7 @@ class GestureClassifier:
 
     def analyze(self, landmarks: Sequence[Landmark]) -> HandPose:
         if len(landmarks) < 21:
-            return HandPose("unknown", {}, 0, 1.0, 1.0, 0.0)
+            return HandPose("unknown", {}, 0, 1.0, 1.0, 0.0, 0.0)
 
         thumb_index_distance = _distance(landmarks[THUMB_TIP], landmarks[INDEX_TIP])
         thumb_middle_distance = _distance(landmarks[THUMB_TIP], landmarks[MIDDLE_TIP])
@@ -74,26 +75,37 @@ class GestureClassifier:
 
         if thumb_index_distance < PINCH_DISTANCE_THRESHOLD:
             gesture = "thumb_index_pinch"
+            confidence = _pinch_confidence(thumb_index_distance)
         elif thumb_middle_distance < PINCH_DISTANCE_THRESHOLD:
             gesture = "thumb_middle_pinch"
+            confidence = _pinch_confidence(thumb_middle_distance)
         elif raised_count == 0 and not thumb_extended:
             gesture = "closed_fist"
+            confidence = 0.92
         elif raised_count == 0 and thumb_extended and landmarks[THUMB_TIP][1] < landmarks[WRIST][1]:
             gesture = "thumbs_up"
+            confidence = 0.9
         elif raised_count >= 3 and index_pinky_distance < PINCH_TOGETHER_DISTANCE_THRESHOLD:
             gesture = "fingers_together"
+            confidence = 0.88
         elif raised_count == 4 and thumb_extended and index_pinky_distance > SPREAD_DISTANCE_THRESHOLD:
             gesture = "spread_fingers"
+            confidence = 0.92
         elif raised_count == 4 and thumb_extended:
             gesture = "open_palm"
+            confidence = 0.94
         elif fingers_up["index"] and fingers_up["middle"] and fingers_up["ring"] and not fingers_up["pinky"]:
             gesture = "three_fingers"
+            confidence = 0.9
         elif fingers_up["index"] and fingers_up["middle"] and not fingers_up["ring"] and not fingers_up["pinky"]:
             gesture = "two_fingers"
+            confidence = 0.92
         elif fingers_up["index"] and not fingers_up["middle"] and not fingers_up["ring"] and not fingers_up["pinky"]:
             gesture = "pointing"
+            confidence = 0.93
         else:
             gesture = "unknown"
+            confidence = 0.3
 
         return HandPose(
             gesture=gesture,
@@ -102,6 +114,7 @@ class GestureClassifier:
             thumb_index_distance=thumb_index_distance,
             thumb_middle_distance=thumb_middle_distance,
             index_pinky_distance=index_pinky_distance,
+            confidence=confidence,
         )
 
 
@@ -153,3 +166,8 @@ class MotionGestureDetector:
 
 def _distance(first: Landmark, second: Landmark) -> float:
     return hypot(first[0] - second[0], first[1] - second[1])
+
+
+def _pinch_confidence(distance: float) -> float:
+    closeness = max(0.0, min(1.0, 1.0 - (distance / PINCH_DISTANCE_THRESHOLD)))
+    return 0.9 + (closeness * 0.1)
