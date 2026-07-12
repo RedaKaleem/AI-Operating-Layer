@@ -314,23 +314,6 @@ Switch workspace
 
 ---
 
-# 📊 Project Statistics
-
-<div align="center">
-
-| | |
-|---|---|
-| ⭐ Stars | XX |
-| 🍴 Forks | XX |
-| 📦 Modules | XX |
-| 💻 Lines of Code | XX |
-| 🧠 AI Models | XX |
-| ✋ Gestures | XX |
-| 🎤 Voice Commands | XX |
-
-</div>
-
----
 
 # 🔮 Vision
 
