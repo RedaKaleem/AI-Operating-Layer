@@ -41,7 +41,7 @@ It is an operating layer that understands your intent and seamlessly interacts w
 
 ---
 
-# 🎥 Demo
+# 🎬 Official Product Trailer
 
 <!-- DEMO GIF -->
 [Video](https://videotourl.com/videos/1783845897742-9a074335-7d2c-4ae2-a092-280c4977fc22.mp4)
@@ -55,11 +55,15 @@ It is an operating layer that understands your intent and seamlessly interacts w
 
 | Dashboard | Hand Tracking |
 |------------|---------------|
-| <img src="assets/dashboard.png"> | <img src="assets/handtracking.png"> |
+| <img width="800" height="500" alt="image" src="https://github.com/user-attachments/assets/9e3c8916-1bcb-4360-b1a3-7de392021025" /> 
+| <img width="800" height="500" alt="Screenshot 1448-01-27 at 2 07 14 PM" src="https://github.com/user-attachments/assets/c1043da8-cbbe-45ee-8c1c-cdfd62eb8e05" />
+ |
 
 | Voice Mode | AI Brain |
 |------------|----------|
-| <img src="assets/voice.png"> | <img src="assets/brain.png"> |
+|<img width="800" height="500" alt="Screenshot 1448-01-27 at 3 51 40 PM" src="https://github.com/user-attachments/assets/798b1d98-ff29-40cd-8613-b2dd82cbc17f" />
+ | <img width="800" height="500" alt="Screenshot 1448-01-27 at 3 50 39 PM" src="https://github.com/user-attachments/assets/f70b60ba-c43f-42e5-a750-5af588773d2b" />
+ |
 
 ---
 
@@ -121,7 +125,8 @@ AuraOS prepares your complete workspace automatically.
 
 <p align="center">
 
-<img src="assets/architecture.png" width="95%">
+<img width="1536" height="1024" alt="brain-arch" src="https://github.com/user-attachments/assets/768d7c3b-7d01-4c21-a324-bfe9adf89718" />
+<img width="1536" height="1024" alt="hand-tracking-arch" src="https://github.com/user-attachments/assets/c55667be-8425-440a-9b92-f9303be99dc1" />
 
 </p>
 
@@ -229,12 +234,13 @@ AuraOS/
 # 📊 Performance
 
 | Metric | Value |
-|---------|--------|
-| Hand Tracking FPS | XX FPS |
-| Gesture Accuracy | XX% |
-| Voice Recognition Accuracy | XX% |
-| Command Latency | XX ms |
-| Model Size | XX MB |
+|---------|-------|
+| Hand Tracking FPS | Device-dependent; not benchmarked |
+| Gesture Accuracy | 96.00% |
+| Voice Recognition Accuracy | Not formally evaluated |
+| Command Latency | Not benchmarked |
+| Hand Gesture Model Size | 111.1 MB |
+| Whisper Voice Model Size | ~141 MB |
 
 ---
 
@@ -242,12 +248,15 @@ AuraOS/
 
 | Gesture | Samples |
 |----------|----------|
-| Cursor | XXXX |
-| Click | XXXX |
-| Scroll | XXXX |
-| Drag | XXXX |
-| Swipe | XXXX |
-| Total | XXXXX |
+|closed_fist  | 674 |
+| idle  | 619 |
+|open_palm  | 574 |
+|pointing    | 573 |
+|spread_fingers | 583 |
+|thumb_index_pinch | 542 |
+|thumb_middle_pinch | 566 |
+|two_fingers  | 613 |
+| Total  | 4744 |
 
 ---
 
